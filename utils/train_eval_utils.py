@@ -84,6 +84,7 @@ def evaluate(model, data_loader, device, epoch, label_smoothing):
     sample_num = 0
     data_loader = tqdm(data_loader, file=sys.stdout)
 
+    step = None
     with torch.no_grad():
         for step, data in enumerate(data_loader):
             hrrp, labels = data
