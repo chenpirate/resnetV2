@@ -94,11 +94,12 @@ class ResNet(nn.Module):
                  num_classes=1000,
                  include_top=True,
                  groups=1,
-                 width_per_group=64):
+                 width_per_group=64,
+                 dimension_reduction=False):
         super(ResNet, self).__init__()
         self.include_top = include_top
         self.in_channel = 64
-
+        self.dimension_reduction = dimension_reduction
         self.groups = groups
         self.width_per_group = width_per_group
 
@@ -114,6 +115,10 @@ class ResNet(nn.Module):
         if self.include_top:
             self.avgpool = nn.AdaptiveAvgPool1d(1)  # output size = (1, 1)
             self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+        if self.dimension_reduction:
+            self.fc2 = nn.Linear(num_classes, 2)
+
         self.apply(self.weigth_init)
 
     @staticmethod
@@ -166,28 +171,32 @@ class ResNet(nn.Module):
             x = self.avgpool(x)
             x = torch.flatten(x, 1)
             x = self.fc(x)
+        
+        if self.include_top and self.dimension_reduction:
+            d_reduction = self.fc1(x)
+            return x, d_reduction
 
         return x
 
 
-def resnet18(num_classes=1000, include_top=True):
+def resnet18(num_classes=1000, include_top=True, dimension_reduction=False):
     # https://download.pytorch.org/models/resnet34-333f7ec4.pth
-    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes, include_top=include_top)
+    return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes, include_top=include_top, dimension_reduction=dimension_reduction)
 
 
-def resnet34(num_classes=1000, include_top=True):
+def resnet34(num_classes=1000, include_top=True, dimension_reduction=False):
     # https://download.pytorch.org/models/resnet34-333f7ec4.pth
-    return ResNet(BasicBlock, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top)
+    return ResNet(BasicBlock, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top, dimension_reduction=dimension_reduction)
 
 
-def resnet50(num_classes=1000, include_top=True):
+def resnet50(num_classes=1000, include_top=True, dimension_reduction=False):
     # https://download.pytorch.org/models/resnet50-19c8e357.pth
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top)
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top, dimension_reduction=dimension_reduction)
 
 
-def resnet101(num_classes=1000, include_top=True):
+def resnet101(num_classes=1000, include_top=True, dimension_reduction=False):
     # https://download.pytorch.org/models/resnet101-5d3b4d8f.pth
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes=num_classes, include_top=include_top)
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_classes=num_classes, include_top=include_top, dimension_reduction=dimension_reduction)
 
 
 if __name__ == '__main__':
