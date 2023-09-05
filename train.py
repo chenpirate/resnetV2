@@ -111,8 +111,8 @@ def main(args):
         tb_writer.add_scalars('loss', {tags[0]: train_loss, tags[2]: val_loss}, epoch)
         tb_writer.add_scalars('acc', {tags[1]: train_acc, tags[3]: val_acc}, epoch)
 
-        for name, param in model.named_parameters():
-            tb_writer.add_histogram(tag=name + '_data', values=param.data, global_step=epoch)
+        # for name, param in model.named_parameters():
+        #     tb_writer.add_histogram(tag=name + '_data', values=param.data, global_step=epoch)
 
         if val_acc > best_acc:
             best_acc = val_acc
@@ -161,19 +161,19 @@ if __name__ == '__main__':
     parser.add_argument('--freeze-layers', type=bool, default=None)
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--num_classes', type=int, default=5)
-    parser.add_argument('--epochs', type=int, default=133)
-    parser.add_argument('--batch-size', type=int, default=2048)
-    parser.add_argument('--val_size', type=int, default=7634)
+    parser.add_argument('--epochs', type=int, default=20)
+    parser.add_argument('--batch-size', type=int, default=512)
+    parser.add_argument('--val_size', type=int, default=2286)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--T_max', type=int, default=133)
+    parser.add_argument('--T_max', type=int, default=20)
     parser.add_argument('--weight_decay', type=float, default=0.005)
-    parser.add_argument('--logs_path', type=str, default="./log/j机")
-    parser.add_argument('--save_path', type=str, default='./weight/j机/')
+    parser.add_argument('--logs_path', type=str, default="./log/9_5")
+    parser.add_argument('--save_path', type=str, default='./weight/9_5/')
     parser.add_argument('--optimizer', type=str, default='AdamW')
     parser.add_argument('--train_path', type=str,
-                        default="./data/j机/train.csv")  # 训练数据集
+                        default="./data/testdata_0905_5lei_kunei_80_100/traindata_0905_5lei_kunei_80_100.csv")  # 训练数据集
     parser.add_argument('--val_path', type=str,
-                        default="./data/j机/test.csv")
+                        default="./data/testdata_0905_5lei_kunei_80_100/testdata_0905_5lei_kunei_80_100.csv")
     parser.add_argument('--label_smoothing', type=float, default=0.1)
     opt = parser.parse_args()
 
