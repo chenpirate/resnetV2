@@ -117,7 +117,7 @@ class ResNet(nn.Module):
             self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         if self.dimension_reduction:
-            self.fc2 = nn.Linear(num_classes, 2)
+            self.fc1 = nn.Linear(num_classes, 2)
 
         self.apply(self.weigth_init)
 
@@ -200,35 +200,38 @@ def resnet101(num_classes=1000, include_top=True, dimension_reduction=False):
 
 
 if __name__ == '__main__':
-    # 计算FLOPs
-    model = resnet18(12)
-    input = torch.randn(1, 1, 512)
-    flops, params = profile(model, inputs=(input,))
-    print('FLOPs = ' + str(flops / 1000 ** 3) + 'G')
-    print('Params = ' + str(params / 1000 ** 2) + 'M')
+    # # 计算FLOPs
+    # model = resnet18(12)
+    # input = torch.randn(1, 1, 512)
+    # flops, params = profile(model, inputs=(input,))
+    # print('FLOPs = ' + str(flops / 1000 ** 3) + 'G')
+    # print('Params = ' + str(params / 1000 ** 2) + 'M')
 
-    # x.pth2onnx
-    # 定义模型
-    model = resnet50(3)
-    pretrained_dict = torch.load('./weight/20230420/50/best.pth', map_location=torch.device('cpu'))
-    model.load_state_dict(pretrained_dict, strict=False)
-    model.eval()
+    # # x.pth2onnx
+    # # 定义模型
+    # model = resnet50(3)
+    # pretrained_dict = torch.load('./weight/20230420/50/best.pth', map_location=torch.device('cpu'))
+    # model.load_state_dict(pretrained_dict, strict=False)
+    # model.eval()
 
-    input0 = torch.randn((1, 1, 512))
-    # yTest = torch.randn((1, 6))
-    y = model(input0)
-    print(y)
+    # input0 = torch.randn((1, 1, 512))
+    # # yTest = torch.randn((1, 6))
+    # y = model(input0)
+    # print(y)
 
-    # ONNX
-    input_names = ["input"]
-    output_names = ["output"]
-    torch.onnx.export(model,
-                      input0,
-                      "resnet50.onnx",
-                      verbose=True,
-                      output_names=["output"],
-                      )
+    # # ONNX
+    # input_names = ["input"]
+    # output_names = ["output"]
+    # torch.onnx.export(model,
+    #                   input0,
+    #                   "resnet50.onnx",
+    #                   verbose=True,
+    #                   output_names=["output"],
+    #                   )
 
+    model = resnet18(12, dimension_reduction=True)
+    x = torch.randn(1, 1, 512)
+    y = model(x)
 
 
 
