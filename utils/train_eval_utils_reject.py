@@ -46,7 +46,7 @@ def train_one_epoch_reject(model, optimizer, data_loader, device, epoch,
         
         kl_loss = KL_loss(pred_dist.log(), d_reduction_dist)
         CEL_lose = CEL(pred, labels.long().to(device))
-        loss = 0.5*CEL_lose + 0.5*kl_loss
+        loss = CEL_lose + kl_loss
         loss.backward()
 
         accu_loss += loss.detach()
