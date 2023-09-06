@@ -2,7 +2,7 @@
 Author: chenpirate chensy293@mail2.sysu.edu.cn
 Date: 2023-02-21 11:10:59
 LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
-LastEditTime: 2023-09-06 10:32:27
+LastEditTime: 2023-09-06 13:44:55
 FilePath: /resnetV2/utils/predict.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -19,7 +19,7 @@ from utils.norm import x_norm
 # 分类网络的输出只是最后一层全连接层的输出，因此需要经过softmax函数，并取最大的概率索引，作为预测类别
 # 使用这个网络，对一条信号进行分类，返回预测类别以及分类网络的输出
 # 实现这个函数
-def predict(hrrp:np.float, model, device="cpu"):
+def predict(hrrp, model, device="cpu"):
     model.eval()
     with torch.no_grad():
         hrrp = torch.from_numpy(hrrp).float().to(device)
