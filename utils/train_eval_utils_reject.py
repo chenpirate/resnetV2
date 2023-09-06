@@ -3,10 +3,11 @@ import sys
 import torch.nn as nn
 from tqdm import tqdm
 import torch
-from utils.centerloss import CenterLoss
+# from utils.centerloss import CenterLoss
+from utils.map_tensor_to_dist import map_tensor_to_dist
 
 
-def train_one_epoch(model, optimizer, data_loader, device, epoch,
+def train_one_epoch_reject(model, optimizer, data_loader, device, epoch,
                     label_smoothing):
     """
     一个epoch里要做的操作
@@ -27,8 +28,8 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch,
     accu_loss = torch.zeros(1).to(device)  # 累计损失
     accu_num = torch.zeros(1).to(device)  # 累计预测正确的样本数
     optimizer.zero_grad()
-    loss1 = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
-
+    CEL = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+    KL_loss = nn.KLDivLoss(reduction='batchmean')
     sample_num = 0
 
     data_loader = tqdm(data_loader, file=sys.stdout)
@@ -36,11 +37,16 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch,
         HRRP, labels = data
         sample_num += HRRP.shape[0]
 
-        pred = model(HRRP.to(device))
+        pred, d_reduction = model(HRRP.to(device))
         pred_classes = torch.max(pred, dim=1)[1]
         accu_num += torch.eq(pred_classes, labels.long().to(device)).sum()
 
-        loss = loss1(pred, labels.long().to(device))
+        pred_dist = map_tensor_to_dist(pred, dist_type="gaussian")
+        d_reduction_dist = map_tensor_to_dist(d_reduction, dist_type="t")
+        
+        kl_loss = KL_loss(pred_dist.log(), d_reduction_dist)
+        CEL_lose = CEL(pred, labels.long().to(device))
+        loss = CEL_lose + 10*kl_loss
         loss.backward()
 
         accu_loss += loss.detach()
@@ -62,7 +68,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch,
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device, epoch, label_smoothing):
+def evaluate_reject(model, data_loader, device, epoch, label_smoothing):
     """
     验证评估函数
     :param model: 模型
@@ -79,23 +85,28 @@ def evaluate(model, data_loader, device, epoch, label_smoothing):
     accu_num = torch.zeros(1).to(device)  # 累计预测正确的样本数
     accu_loss = torch.zeros(1).to(device)  # 累计损失
 
-    loss1 = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+    CEL = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+    KL_loss = nn.KLDivLoss(reduction='batchmean')
 
     sample_num = 0
     data_loader = tqdm(data_loader, file=sys.stdout)
 
-    step = None
     with torch.no_grad():
         for step, data in enumerate(data_loader):
             hrrp, labels = data
             sample_num += hrrp.shape[0]
 
-            pred = model(hrrp.to(device))
+            pred, d_reduction = model(hrrp.to(device))
             pred_classes = torch.max(pred, dim=1)[1]
             accu_num += torch.eq(pred_classes, labels.long().to(device)).sum()
 
             # loss = loss_function(pred, labels.long().to(device))
-            loss = loss1(pred, labels.long().to(device))
+            pred_dist = map_tensor_to_dist(pred, dist_type="gaussian")
+            d_reduction_dist = map_tensor_to_dist(d_reduction, dist_type="t")
+            
+            kl_loss = KL_loss(pred_dist.log(), d_reduction_dist)
+            CEL_lose = CEL(pred, labels.long().to(device))
+            loss = CEL_lose + 10*kl_loss
             accu_loss += loss
 
             data_loader.desc = "[valid epoch {}] valid loss: {:.3f}, acc: {:.2f}%".format(epoch + 1,

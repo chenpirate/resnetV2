@@ -1,3 +1,11 @@
+'''
+Author: chenpirate chensy293@mail2.sysu.edu.cn
+Date: 2023-02-21 11:10:59
+LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
+LastEditTime: 2023-09-05 16:52:15
+FilePath: /resnetV2/utils/dataset.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 from os import cpu_count
 import json
 import numpy as np
@@ -29,7 +37,8 @@ class HrrpDataset(Dataset):
         label = xy.iloc[:, -1]
         enc = LabelEncoder()  # 获取一个LabelEncoder
         # labels = ['A330', 'A350', 'ARJ21', 'BY737', 'BY777', 'BY787', 'A321', 'A320', 'CRJ21']
-        labels = ['Prop1', 'Prop3', 'Prop4', 'Y20']
+        # labels = ['Prop1', 'Prop3', 'Prop4', 'Y20']
+        labels = [1, 3, 5]
         enc = enc.fit(labels)
         dict_list = {}
         for cl in enc.classes_:
