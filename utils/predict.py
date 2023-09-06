@@ -1,49 +1,55 @@
+'''
+Author: chenpirate chensy293@mail2.sysu.edu.cn
+Date: 2023-02-21 11:10:59
+LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
+LastEditTime: 2023-09-06 10:32:27
+FilePath: /resnetV2/utils/predict.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 import os
 import json
 import torch
 import pandas as pd
 import time
-from contrative.restnet34 import resnet34
+import numpy as np
+from model import resnet18
+from utils.norm import x_norm
 
-
-def main():
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")
-    print("using {} device.".format(device))
-
-    # read class_indict
-    json_path = './real_class_indices.json'
-    assert os.path.exists(json_path), "file: '{}' dose not exist.".format(json_path)  # 判断路径是否有此文件存在
-
-    json_file = open(json_path, "r")
-    class_indict = json.load(json_file)  # 将json_file文件从字典转换为字符串
-
-    # 读取数据
-    df = pd.read_csv("test.csv", header=None)
-    data = df.iloc[0, :-1].values.reshape(1, 1, 1024)
-
-    # 转换成tensor
-    data = torch.from_numpy(data)
-
-    # 创建模型
-    model = resnet34().to(device)
-
-    # 载入模型权重
-    weights_path = "./CNN_1D.pth"
-    assert os.path.exists(weights_path), "file: '{}' dose not exist.".format(weights_path)
-    model.load_state_dict(torch.load(weights_path))
-
+# 有一个训练好的分类网络，并加载好了权重
+# 分类网络的输出只是最后一层全连接层的输出，因此需要经过softmax函数，并取最大的概率索引，作为预测类别
+# 使用这个网络，对一条信号进行分类，返回预测类别以及分类网络的输出
+# 实现这个函数
+def predict(hrrp:np.float, model, device="cpu"):
     model.eval()
     with torch.no_grad():
-        output = torch.squeeze(model(data.float().to(device))).cpu()
-        predict = torch.softmax(output, dim=0)
-        predict_cla = torch.argmax(predict).numpy()  # 获取概率最大处的索引值
+        hrrp = torch.from_numpy(hrrp).float().to(device)
+        output = model(hrrp)
+        prob = torch.nn.functional.softmax(output, dim=1)
+        prob = prob.cpu().numpy()
+        pred = prob.argmax(axis=1)
+        return pred, output
 
-    for i in range(len(predict)):
-        print("class: {:10}   prob: {:.3}".format(class_indict[str(i)],
-                                                  predict[i].numpy()))
-    print_res1 = "class: {}".format(class_indict[str(predict_cla)])
-    print("*" * 150, '\n', print_res1)
+def main():
+    # 加载网络
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = resnet18(num_classes=10).to(device)
+    model_weight_path = "./model/resnet18_epoch_100.pth"
+    model.load_state_dict(torch.load(model_weight_path, map_location=device))
+
+    # 加载数据并归一化
+    data_path = "./data/test.csv"
+    df = pd.read_csv(data_path)
+    x = df.iloc[:, :-1].values
+    x = x_norm(x)
+
+    # 加载类别json
+    json_label_path = "./data/label_list.json"
+    json_file = open(json_label_path, 'r')
+    class_indict = json.load(json_file)
+
+    # 预测
+    pred, output = predict(x[0], model, device)
+    print(pred, output)
 
 
 if __name__ == '__main__':
