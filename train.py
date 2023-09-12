@@ -33,12 +33,13 @@ def main(args):
     batch_size = args.batch_size
     train_path = args.train_path
     val_path = args.val_path
+    class_indices_json_path = args.class_indices_json_path
     nw = os.cpu_count()
     print('Using {} dataloader workers every process'.format(nw))
 
     '''实例化训练集验证集,并加载'''
-    train_dataloader, train_size = my_dataloader(train_path, batch_size=batch_size, nw=nw)
-    val_dataloader, val_size = my_dataloader(val_path, batch_size=args.val_size, nw=nw)
+    train_dataloader, train_size = my_dataloader(train_path, class_indices_json_path, batch_size=batch_size, nw=nw)
+    val_dataloader, val_size = my_dataloader(val_path, class_indices_json_path, batch_size=args.val_size, nw=nw)
 
     print("using {} HRRP datas for training, {} HRRP data for validation.".format(train_size,
                                                                                   val_size))
@@ -156,6 +157,7 @@ if __name__ == '__main__':
     start = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument('--warmup_steps', type=int, default=5)
+    parser.add_argument('--class_indices_json_path', type=str, default="./class_indices.json")
     parser.add_argument('--weights', type=str, default='',
                         help='initial weights path')
     parser.add_argument('--freeze-layers', type=bool, default=None)
