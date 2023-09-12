@@ -164,13 +164,13 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--num_classes', type=int, default=6)
     parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--batch-size', type=int, default=512)
+    parser.add_argument('--batch-size', type=int, default=2048)
     parser.add_argument('--val_size', type=int, default=16810)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--T_max', type=int, default=20)
     parser.add_argument('--weight_decay', type=float, default=0.005)
     parser.add_argument('--logs_path', type=str, default="./log/9_12")
-    parser.add_argument('--save_path', type=str, default='./weight/9_12/')
+    parser.add_argument('--save_path', type=str, default='./weight/9_12_')
     parser.add_argument('--optimizer', type=str, default='AdamW')
     parser.add_argument('--train_path', type=str,
                         default="data/9.12/traindata_013489.csv")  # 训练数据集
