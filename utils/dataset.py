@@ -2,7 +2,7 @@
 Author: chenpirate chensy293@mail2.sysu.edu.cn
 Date: 2023-02-21 11:10:59
 LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
-LastEditTime: 2023-09-12 09:58:00
+LastEditTime: 2023-09-12 09:59:44
 FilePath: /resnetV2/utils/dataset.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -87,8 +87,8 @@ def x_norm(x):
     return x
 
 
-def my_dataloader(root, shuffle=True, drop_last=True, batch_size=1, nw=cpu_count()):
-    dataset = HrrpDataset(root)
+def my_dataloader(dataset_path, json_path, shuffle=True, drop_last=True, batch_size=1, nw=cpu_count()):
+    dataset = HrrpDataset(dataset_path, json_path)
     datasize = len(dataset)
     data_loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=nw, shuffle=shuffle,
                              drop_last=drop_last)
@@ -96,6 +96,6 @@ def my_dataloader(root, shuffle=True, drop_last=True, batch_size=1, nw=cpu_count
 
 
 if __name__ == '__main__':
-    _, train_size = my_dataloader('/home/private/hrrp/NanHu/20230419/test/test.csv', batch_size=32,
+    _, train_size = my_dataloader('/home/private/hrrp/NanHu/20230419/test/test.csv', json_path, batch_size=32,
                                   nw=16)
     print("using {} HRRP datas for training.".format(train_size))
