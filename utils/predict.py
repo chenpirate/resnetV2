@@ -2,7 +2,7 @@
 Author: chenpirate chensy293@mail2.sysu.edu.cn
 Date: 2023-02-21 11:10:59
 LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
-LastEditTime: 2023-09-06 13:44:55
+LastEditTime: 2023-09-12 13:43:59
 FilePath: /resnetV2/utils/predict.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -23,11 +23,13 @@ def predict(hrrp, model, device="cpu"):
     model.eval()
     with torch.no_grad():
         hrrp = torch.from_numpy(hrrp).float().to(device)
+        if hrrp.ndim != 3:
+            hrrp = hrrp.reshape(1, 1, hrrp.size()[-1])
         output = model(hrrp)
         prob = torch.nn.functional.softmax(output, dim=1)
         prob = prob.cpu().numpy()
         pred = prob.argmax(axis=1)
-        return pred, output
+        return pred[0], output
 
 def main():
     # 加载网络
