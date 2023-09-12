@@ -2,7 +2,7 @@
 Author: chenpirate chensy293@mail2.sysu.edu.cn
 Date: 2023-02-21 11:10:59
 LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
-LastEditTime: 2023-09-12 12:20:39
+LastEditTime: 2023-09-12 12:45:55
 FilePath: /resnetV2/utils/dataset.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -38,23 +38,12 @@ class HrrpDataset(Dataset):
         self.labels = df.iloc[:, -1]
         labels_json = open(self.json_path, 'r')
         self.class_indict = json.load(labels_json)
-        print(self.labels[0])
-        print(self.class_indict[str(self.labels[0])])
+        # print(self.labels[0])
+        # print(self.class_indict[str(self.labels[0])])
         
 
-    def __getitem__(self, idx):
-        # df = pd.read_csv(self.dataset_path, header=None)
-        # # 准备数据
-        # datas = df.iloc[:, :-1].values
-        # datas = x_norm(datas)
-        # datas = torch.from_numpy(datas)
-        # self.datas = torch.unsqueeze(datas.float(), dim=1)
-
-        # labels = df.iloc[:, -1]
-        # labels_json = open(self.json_path, 'r')
-        # class_indict = json.load(labels_json)
-
-        return self.datas[idx], self.class_indict[self.labels[idx]]
+    def __getitem__(self, idx):                                  
+        return self.datas[idx], self.class_indict[str(self.labels[idx])]
 
     def __len__(self):
         return len(self.datas)
@@ -78,9 +67,11 @@ def my_dataloader(dataset_path, json_path, shuffle=True, drop_last=True, batch_s
 
 
 if __name__ == '__main__':
-    _, train_size = my_dataloader('data/9.12/traindata_013489.csv', "class_indices.json", batch_size=32,
-                                  nw=16)
+    data_loader, train_size = my_dataloader("data/9.12/testdata_013489.csv", "class_indices.json", batch_size=32, nw=16)
     print("using {} HRRP datas for training.".format(train_size))
+
+    # for data in data_loader:
+    #     print(data)
 
     # df = pd.read_csv('data/9.12/traindata_013489.csv', header=None)
     # print(df.head())
