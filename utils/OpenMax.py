@@ -2,7 +2,7 @@
 Author: chenpirate chensy293@mail2.sysu.edu.cn
 Date: 2023-09-05 22:33:25
 LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
-LastEditTime: 2023-09-11 08:50:35
+LastEditTime: 2023-09-12 09:27:17
 FilePath: /resnetV2/utils/save_correctly_classified_output.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -81,41 +81,46 @@ def get_probabilities(unknow, centroids, know_distances):
 
 
 # 获取未知样本的概率
-class GetProblity():
+class GetProbalitys():
     def __init__(self) -> None:
-        self.target_map_unit_measures_cdf_pairs = {}
+        # self.target_map_unit_measures_cdf_pairs = {}
+        pass
 
-    def unit_measures_cdf_pairs(self, datas_dict:dict):
-        for target, datas in datas_dict.items():
+    def get_unit_measures_cdf_pairs(self, known_distances_dict:dict):
+        '''
+        :param known_distances_dict:已知类的网络输出与质心的距离
+        '''
+
+        target_map_unit_measures_cdf_pairs = {}
+        for target, distances in known_distances_dict.items():
             # 对datas从小到大排列
-            datas.sort()
-            max_value = datas[-1]
+            distances.sort()
+            max_value = distances[-1]
             unit_measures = max_value/100
             cdf = []
             for i in range(1, 100):
                 count = 0
-                for data in datas:
-                    if data>i*unit_measures: break
+                for distance in distances:
+                    if distance>i*unit_measures: break
                     count += 1
                 # print(f"i:{i} \t count:{count}")
-                cdf.append(count/len(datas))
+                cdf.append(count/len(distances))
             # 反转cdf
             cdf.reverse()
-            self.target_map_unit_measures_cdf_pairs[target] = [unit_measures, cdf]
+            target_map_unit_measures_cdf_pairs[target] = [unit_measures, cdf]
+        return target_map_unit_measures_cdf_pairs
 
 
-    def get_probabilitys(self, unknow_target_dists:list)->dict:
-
-        # 获取未知样本的概率
+    def get_probabilitys(self, dists_with_each_known_centroid:list, unit_measures_cdf_pairs)->dict:
+        # 获取未知样本的概率属于库内各类的概率
         probabilitys = {}
-        for target, unknow_target_dist in enumerate(unknow_target_dists):
-            unit_measures, cdf = self.target_map_unit_measures_cdf_pairs[target]
-            idx = int(unknow_target_dist/unit_measures)
+        for target, dist in enumerate(dists_with_each_known_centroid):
+            unit_measures, cdf = unit_measures_cdf_pairs[target]
+            idx = int(dist/unit_measures)
             try:
                 probabilitys[target] = cdf[idx]   
             except IndexError:
                 probabilitys[target] = cdf[-1]
-
         return probabilitys
 
 
@@ -124,15 +129,15 @@ class GetProblity():
 # 输出：修正后的未知样本的特征向量
 # 修正逻辑：
 # 修正后的未知样本的特征向量=未知样本的特征向量×（1-概率tensor）
-def correct_score(unknown_feature, probabilities):
+def correct_score(unknown_feature, unkonw_target_probabilitys):
     '''
     修正得分函数
     :param distances: 未知样本到各个类质心的距离映射后概率tensor
     :param unknown_feature: 未知样本的特征向量
-    :param probabilities: 未知样本到各个类质心的距离映射后概率tensor
+    :param unkonw_target_probabilitys: 未知样本到各个类质心的距离映射后概率tensor
     :return: 修正后的未知样本的特征向量
     '''
-    return unknown_feature * (1 - probabilities)
+    return unknown_feature * (1 - unkonw_target_probabilitys)
 
 
 # 未知类的得分
@@ -202,7 +207,7 @@ def is_unknown(probabilitie, class_index, threadhold):
     return False
 
 
-def get_centroids(model, data_path, json_label_path):
+def get_dists_and_centroids(model, data_path, json_label_path):
     # 加载网络
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # model = resnet18(num_classes=10).to(device)
@@ -241,7 +246,7 @@ def get_centroids(model, data_path, json_label_path):
         centroids[key]=compute_centroid(value)
         dists[key] = [compute_distance(output, centroids[key]) for output in value]
 
-    return centroids
+    return dists, centroids
 
 
 # 矫正未知样本每类的得分并添加未知类的得分
