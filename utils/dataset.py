@@ -2,7 +2,7 @@
 Author: chenpirate chensy293@mail2.sysu.edu.cn
 Date: 2023-02-21 11:10:59
 LastEditors: chenpirate chensy293@mail2.sysu.edu.cn
-LastEditTime: 2023-09-05 16:52:15
+LastEditTime: 2023-09-12 12:45:55
 FilePath: /resnetV2/utils/dataset.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -27,32 +27,27 @@ class Encoder(json.JSONEncoder):
 
 
 class HrrpDataset(Dataset):
-    def __init__(self, path):
-        self.xy = pd.read_csv(path, header=None)
-        xy = self.xy
-        x = xy.iloc[:, :-1].values
-        x = x_norm(x)
-        x = torch.from_numpy(x)
-        self.x = torch.unsqueeze(x.float(), dim=1)
-        label = xy.iloc[:, -1]
-        enc = LabelEncoder()  # 获取一个LabelEncoder
-        # labels = ['A330', 'A350', 'ARJ21', 'BY737', 'BY777', 'BY787', 'A321', 'A320', 'CRJ21']
-        # labels = ['Prop1', 'Prop3', 'Prop4', 'Y20']
-        labels = [1, 3, 5]
-        enc = enc.fit(labels)
-        dict_list = {}
-        for cl in enc.classes_:
-            dict_list.update({cl: int(enc.transform([cl])[0])})
-        res = dict(zip(dict_list.values(), dict_list.keys()))
-        with open("class_indices.json", "w", encoding='gbk') as f:
-            json.dump(res, f, indent=2, sort_keys=True, ensure_ascii=False, cls=Encoder)
-        self.y = enc.transform(label)
+    def __init__(self, dataset_path, json_path):
+        self.json_path = json_path
+        df = pd.read_csv(dataset_path, header=None)
+        datas = df.iloc[:, :-1].values
+        datas = x_norm(datas)
+        datas = torch.from_numpy(datas)
+        self.datas = torch.unsqueeze(datas.float(), dim=1)
 
-    def __getitem__(self, idx):
-        return self.x[idx], self.y[idx]
+        self.labels = df.iloc[:, -1]
+        labels_json = open(self.json_path, 'r')
+        self.class_indict = json.load(labels_json)
+        # print(self.labels[0])
+        # print(self.class_indict[str(self.labels[0])])
+        
+
+    def __getitem__(self, idx):                                  
+        return self.datas[idx], self.class_indict[str(self.labels[idx])]
 
     def __len__(self):
-        return len(self.y)
+        return len(self.datas)
+
 
 
 def x_norm(x):
@@ -61,8 +56,10 @@ def x_norm(x):
     return x
 
 
-def my_dataloader(root, shuffle=True, drop_last=True, batch_size=1, nw=cpu_count()):
-    dataset = HrrpDataset(root)
+def my_dataloader(dataset_path, json_path, shuffle=True, drop_last=True, batch_size=1, nw=cpu_count()):
+    dataset = HrrpDataset(dataset_path, json_path)
+    # print(dataset.__getitem__(0))
+
     datasize = len(dataset)
     data_loader = DataLoader(dataset=dataset, batch_size=batch_size, num_workers=nw, shuffle=shuffle,
                              drop_last=drop_last)
@@ -70,6 +67,11 @@ def my_dataloader(root, shuffle=True, drop_last=True, batch_size=1, nw=cpu_count
 
 
 if __name__ == '__main__':
-    _, train_size = my_dataloader('/home/private/hrrp/NanHu/20230419/test/test.csv', batch_size=32,
-                                  nw=16)
+    data_loader, train_size = my_dataloader("data/9.12/testdata_013489.csv", "class_indices.json", batch_size=32, nw=16)
     print("using {} HRRP datas for training.".format(train_size))
+
+    # for data in data_loader:
+    #     print(data)
+
+    # df = pd.read_csv('data/9.12/traindata_013489.csv', header=None)
+    # print(df.head())

@@ -33,12 +33,13 @@ def main(args):
     batch_size = args.batch_size
     train_path = args.train_path
     val_path = args.val_path
+    class_indices_json_path = args.class_indices_json_path
     nw = os.cpu_count()
     print('Using {} dataloader workers every process'.format(nw))
 
     '''实例化训练集验证集,并加载'''
-    train_dataloader, train_size = my_dataloader(train_path, batch_size=batch_size, nw=nw)
-    val_dataloader, val_size = my_dataloader(val_path, batch_size=args.val_size, nw=nw)
+    train_dataloader, train_size = my_dataloader(train_path, class_indices_json_path, batch_size=batch_size, nw=nw)
+    val_dataloader, val_size = my_dataloader(val_path, class_indices_json_path, batch_size=args.val_size, nw=nw)
 
     print("using {} HRRP datas for training, {} HRRP data for validation.".format(train_size,
                                                                                   val_size))
@@ -156,24 +157,25 @@ if __name__ == '__main__':
     start = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument('--warmup_steps', type=int, default=5)
+    parser.add_argument('--class_indices_json_path', type=str, default="./class_indices.json")
     parser.add_argument('--weights', type=str, default='',
                         help='initial weights path')
     parser.add_argument('--freeze-layers', type=bool, default=None)
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
-    parser.add_argument('--num_classes', type=int, default=5)
+    parser.add_argument('--num_classes', type=int, default=6)
     parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--batch-size', type=int, default=512)
-    parser.add_argument('--val_size', type=int, default=2286)
+    parser.add_argument('--batch-size', type=int, default=2048)
+    parser.add_argument('--val_size', type=int, default=16810)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--T_max', type=int, default=20)
     parser.add_argument('--weight_decay', type=float, default=0.005)
-    parser.add_argument('--logs_path', type=str, default="./log/9_5")
-    parser.add_argument('--save_path', type=str, default='./weight/9_5/')
+    parser.add_argument('--logs_path', type=str, default="./log/9_12")
+    parser.add_argument('--save_path', type=str, default='./weight/9_12_')
     parser.add_argument('--optimizer', type=str, default='AdamW')
     parser.add_argument('--train_path', type=str,
-                        default="./data/testdata_0905_5lei_kunei_80_100/traindata_0905_5lei_kunei_80_100.csv")  # 训练数据集
+                        default="data/9.12/traindata_013489.csv")  # 训练数据集
     parser.add_argument('--val_path', type=str,
-                        default="./data/testdata_0905_5lei_kunei_80_100/testdata_0905_5lei_kunei_80_100.csv")
+                        default="data/9.12/testdata_013489.csv")
     parser.add_argument('--label_smoothing', type=float, default=0.1)
     opt = parser.parse_args()
 
